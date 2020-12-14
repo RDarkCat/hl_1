@@ -1,0 +1,99 @@
+vagrant ssh
+
+$ sudo -s
+# yum install vim
+# vim /etc/ssh/sshd_config
+
+PasswordAuthentication yes
+PermitRootLogin yes
+:wq
+
+# systemctl restart sshd
+
+# yum install -y epel-release
+# yum update -y
+# rpm -Uhv http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+# yum install -y nginx php73 php73-php-fpm
+# vim /etc/opt/remi/php73/php-fpm.d/www.conf
+
+user = nginx
+group = nginx
+listen = /var/run/php-fpm.sock
+listen.owner = nginx
+listen.group = nginx
+listen.mode = 0660
+
+# set<TAB>
+# setenforce 0
+
+# vim /etc/selinux/config
+SELINUX=disabled
+
+# systemctl enable php73-php-fpm.service
+# systemctl start php73-php-fpm.service
+
+# mkdir -p /var/www/highload.gb
+# chown vagrant:nginx /var/www/highload.gb/
+# chmod 0775 /var/www/highload.gb/
+
+# vim /etc/nginx/conf.d/highload.gb.conf
+
+server {
+    listen 80;
+    server_name highload.gb;
+    root /var/www/highload.gb;
+    index index.php;
+	
+    location ~* .(jpg|jpeg|gif|css|png|js|ico|html)$ {
+        access_log off;
+        expires max;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~* .php$ {
+        try_files $uri = 404;
+        fastcgi_split_path_info ^(.+.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}
+
+# systemctl enable nginx
+# systemctl start nginx
+
+# yum install -y zip unzip
+
+# yum search mbstring
+# yum install -y php73-php-mbstring php73-php-dom mc
+
+
+Сделаем больше, установим Laravel
+
+$ mkdir highload.gb
+$ cd highload.gb
+$ sudo -s
+
+# curl -sS https://getcomposer.org/installer | php
+# mv composer.phar /usr/bin/composer
+# chmod +x /usr/bin/composer
+# exit
+
+$ composer create-project laravel/laravel .
+$ php artisan key:generate
+
+# vim /etc/nginx/conf.d/highload.gb.conf
+root /var/www/highload.gb/public;
+
+# php artisan storage:link
+
+# chown -R vagrant:nginx /var/www/highload/gb/storage/framework/views
+# chown -R vagrant:nginx /var/www/highload/gb/storage/framework/sessions
+# chown -R vagrant:nginx /var/www/highload/gb/storage/framework/cache
+
+Laravel works fine.
+
