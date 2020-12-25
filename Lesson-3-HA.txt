@@ -1,0 +1,65 @@
+1. Установить выбранный форк MySQL Server.
+
+$ sudo -s 
+
+# cat > MariaDB.repo <<EOF
+# MariaDB 10.5 CentOS repository list - created 2020-12-21 15:16 UTC
+# http://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.5/centos7-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF
+
+$ sudo -s
+# yum clean all
+# yum update
+# yum install -y MariaDB-server MariaDB-compat MariaDB-client
+
+# mysql_secure_installation
+
+2.
+
+# mysql < /root/db.sql
+# mysql -e "SHOW DATABASES;" > result_dbs.txt
+
+Database
+information_schema
+mysql
+performance_schema
+skytech
+
+# mysql -e "use skytech; SHOW TABLES;" > result_tables.txt
+Tables_in_skytech
+b_sale_basket
+
+3. Какие ситуации, вызывающие рост количества запросов, могут случаться на сервере? Мы рассмотрели не все.
+
+- Отсутствие индексов в таблицах
+- Отсутствие кэширования
+- Попытки атаковать сервер БД
+- Агрессивный мониторинг БД
+- Пользовательские:
+   - Нагрузка в соответствии с рабочими часами
+   - Построение отчетности (дневной, месячной, квартальной)
+   - Для Интернет-магазинов, характерны не согласованные с ДБА акции на товар.
+  
+4.* В каких случаях индекс в MySQL не будет применятся, даже если он доступен и выборка должна использовать его?
+
+http://www.mysql.ru/docs/man/MySQL_indexes.html
+
+ В некоторых случаях MySQL не использует индекс, даже если это возможно. Несколько примеров таких ситуаций приведено ниже:
+
+    Если использование индекса требует от MySQL прохода более чем по 30% строк в данной таблице (надо понимать что значение берется из статистики выполнения запросов)
+	(в таких случаях просмотр таблицы, по всей видимости, окажется намного быстрее, так как потребуется выполнить меньше операций поиска).
+	Следует учитывать, что если подобный запрос использует LIMIT по отношению только к извлекаемой части строк,
+	то MySQL будет применять индекс в любом случае, так как небольшое количество строк можно найти намного быстрее, чтобы вернуть результат.
+    Если диапазон изменения индекса может содержать величины NULL при использовании выражений ORDER BY ... DESC. 
+
+5.* Как принудительно применить индекс?
+
+https://dev.mysql.com/doc/refman/8.0/en/index-hints.html
+
+SELECT * FROM table1 USE INDEX (col1_index,col2_index) WHERE col1=1 AND col2=2 AND col3=3;
+  
