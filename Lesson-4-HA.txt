@@ -1,0 +1,131 @@
+1. Собрать две виртуальные машины с установленным MySQL-сервером.
+
+Использовал ваш подход из урока
+
+Virtualbox Clone
+
+
+2. Развернуть репликацию на этих двух серверах.
+
+Буду делать так как делаю на проде.
+
+192.168.111.4 (master)
+
+$ sudo -s
+# cat /etc/my.cnf.d/gserv.cnf
+[mysqld]
+server-id=1
+log-bin=mysql-bin.log
+binlog_do_db=skytech
+
+# mariabackup --user=root --password=password --backup --target-dir=/root/backup/skytech
+# scp -r /root/backup/skytech root@192.168.111.3:/root/backup/skytech
+
+
+192.168.111.3 (slave)
+
+$ sudo -s
+# cat /etc/my.cnf.d/gserv.cnf
+[mysqld]
+server-id=2
+relay-log=mysql-relay-bin.log
+log-bin=mysql-bin.log
+binlog_do_db=skytech
+
+# mariabackup --user=root --password=password --prepare --target-dir=/root/backup/skytech
+# systemctl stop mariadb
+# rm -rf /var/lib/mysql (использовал mc для надежности)
+# mariabackup --user=root --password=password --move-back --target-dir=/root/backup/skytech
+# chown -R mysql:mysql /var/lib/mysql
+# systemctl start mariadb
+# cat /var/lib/mysql/xtrabackup_binlog_info
+uuid = 37050902-4689-11eb-8712-5254004d77d3
+name = 
+tool_name = mariabackup
+tool_command = --user=root --password=... --backup --target-dir=/root/backup/skytech
+tool_version = 10.5.8-MariaDB
+ibbackup_version = 10.5.8-MariaDB
+server_version = 10.5.8-MariaDB-log
+start_time = 2020-12-25 08:14:28
+end_time = 2020-12-25 08:14:31
+lock_time = 0
+binlog_pos = filename 'mysql-bin.000002', position '142176172', GTID of the last change '0-1-156'
+innodb_from_lsn = 0
+innodb_to_lsn = 325614164
+partial = N
+incremental = N
+format = file
+compressed = N
+
+
+Нужная строка: binlog_pos = filename 'mysql-bin.000002', position '142176172', GTID of the last change '0-1-156'
+
+SET GLOBAL gtid_slave_pos='0-1-156';
+CHANGE MASTER TO master_host="192.168.111.4", master_user="slave_user", master_password="slave_user", master_use_gtid=slave_pos;
+START SLAVE;
+quit
+
+mysql -e 'SHOW SLAVE STATUS;' > output.txt
+# cat output.txt
+*************************** 1. row ***************************
+                Slave_IO_State: Waiting for master to send event
+                   Master_Host: 192.168.111.4
+                   Master_User: slave_user
+                   Master_Port: 3306
+                 Connect_Retry: 60
+               Master_Log_File: mysql-bin.000002
+           Read_Master_Log_Pos: 142176172
+                Relay_Log_File: mysql-relay-bin.000002
+                 Relay_Log_Pos: 670
+         Relay_Master_Log_File: mysql-bin.000002
+              Slave_IO_Running: Yes
+             Slave_SQL_Running: Yes
+               Replicate_Do_DB: 
+           Replicate_Ignore_DB: 
+            Replicate_Do_Table: 
+        Replicate_Ignore_Table: 
+       Replicate_Wild_Do_Table: 
+   Replicate_Wild_Ignore_Table: 
+                    Last_Errno: 0
+                    Last_Error: 
+                  Skip_Counter: 0
+           Exec_Master_Log_Pos: 142176172
+               Relay_Log_Space: 979
+               Until_Condition: None
+                Until_Log_File: 
+                 Until_Log_Pos: 0
+            Master_SSL_Allowed: No
+            Master_SSL_CA_File: 
+            Master_SSL_CA_Path: 
+               Master_SSL_Cert: 
+             Master_SSL_Cipher: 
+                Master_SSL_Key: 
+         Seconds_Behind_Master: 0
+ Master_SSL_Verify_Server_Cert: No
+                 Last_IO_Errno: 0
+                 Last_IO_Error: 
+                Last_SQL_Errno: 0
+                Last_SQL_Error: 
+   Replicate_Ignore_Server_Ids: 
+              Master_Server_Id: 1
+                Master_SSL_Crl: 
+            Master_SSL_Crlpath: 
+                    Using_Gtid: Slave_Pos
+                   Gtid_IO_Pos: 0-1-156
+       Replicate_Do_Domain_Ids: 
+   Replicate_Ignore_Domain_Ids: 
+                 Parallel_Mode: optimistic
+                     SQL_Delay: 0
+           SQL_Remaining_Delay: NULL
+       Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+              Slave_DDL_Groups: 0
+Slave_Non_Transactional_Groups: 0
+    Slave_Transactional_Groups: 0
+	
+	
+Репликация работает с использованием GTID, на это указывают:
+    Slave_IO_Running: Yes
+    Slave_SQL_Running: Yes
+	Using_Gtid: Slave_Pos
+    Gtid_IO_Pos: 0-1-156
+	
