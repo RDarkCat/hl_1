@@ -14,5 +14,5 @@ $ sudo -s
 Файлы:
 
 composer.json
-index.php
+product.php
 index.html
