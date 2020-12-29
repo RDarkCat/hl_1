@@ -1,0 +1,18 @@
+1. Развернуть механизмы кеширования на виртуальной машине.
+
+$ sudo -s
+# yum search memcached
+# yum install -y php73-php-pecl-memcached
+# yum search redis
+# yum install -y redis php73-php-pecl-redis
+# systemctl start redis
+
+2. Реализовать схему загрузки данных из Redis (без Memcached в NGINX) 
+согласно иллюстрации в главе «Что выбрать».
+Замерить производительность страницы без кеша и с ним.
+
+Файлы:
+
+composer.json
+index.php
+index.html
