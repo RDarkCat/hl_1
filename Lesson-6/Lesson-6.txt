@@ -1,0 +1,56 @@
+1. Построить NGINX-балансировку между двумя виртуальными машинами. Доказать, что балансировка происходит.
+
+Gif "видео" в файле gt0HvPAxXT.gif
+
+
+2. Реализовать альтернативное хранение сессий в Memcached.
+
+
+Gif "видео" в файле XmLJ3Jtghx.gif
+
+
+Команды, которые вводил в терминале (не все получалось с первого раза :))
+
+
+192.168.111.3
+
+
+systemctl status nginx
+mc
+systemctl restart nginx
+mc
+systemctl restart php73-php-fpm.service 
+systemctl yum install php73-php-pecl-memcached
+yum install php73-php-pecl-memcached
+systemctl restart php73-php-fpm.service 
+systemctl restart nginx
+mc
+systemctl restart php73-php-fpm.service 
+exit
+
+
+
+
+192.168.111.4
+
+yum search memcached
+yum install php73-php-pecl-memcached
+mc
+systemctl restart php73-php-fpm.service 
+ifconfig
+systemctl restart nginx
+mc
+systemctl restart php73-php-fpm.service 
+systemctl restart nginx
+mc
+systemctl restart php73-php-fpm.service 
+telnet
+yum install telnet
+telnet 192.168.111.4 11211
+telnet 127.0.0.1 11211
+ifconfig
+yum search memcached
+yum install memcached
+systemctl start memcached
+telnet 127.0.0.1 11211
+exit
