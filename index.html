@@ -1,0 +1,47 @@
+<html>
+<head>
+<title></title>
+</head>
+<body>
+
+<div id='PopUp' style='display: none; position: absolute; left: 100px; top: 50px; border: solid black 1px; padding: 10px; background-color: rgb(200,100,100); text-align: justify; font-size: 12px; width: 600px; height:400px;' onmouseover="document.getElementById('PopUp').style.display = 'none' ">
+<span id='PopUpName'></span>
+<span id='PopUpPrice'></span>
+<span id='PopUpDescriptrion'></span>
+<span id='PopUpTime'></span>
+</div>
+
+    <form action="" method="POST">
+        <input onmouseover="OverT(this)" onmouseleave="NoOverT(this)" type="submit" name="submit" value="Send" />
+    </form>
+
+<script>
+function OverT() {
+	document.getElementById('PopUp').style.display='block';
+
+	fetch("product.php", {
+	method: "POST",
+	body: "product=product1",
+	   headers: 
+    {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+	})
+	.then(resp => { 
+	return resp.json()
+	})
+	.then(realResp => {
+	   document.getElementById('PopUpName').innerText = realResp.name;
+	   document.getElementById('PopUpPrice').innerText = realResp.price;
+	   document.getElementById('PopUpDescriptrion').innerText = realResp.description;
+	   document.getElementById('PopUpTime').innerText = realResp.time;
+	   }
+	)
+}
+
+function NoOverT() {
+document.getElementById('PopUp').style.display='none';
+}
+</script>
+</body>
+</html>
