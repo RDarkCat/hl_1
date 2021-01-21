@@ -1,0 +1,31 @@
+1. Установить Zabbix Server.
+
+Пруф установки fontend_configuration.gif
+
+2. Добавить шаблон мониторинга HTTP-соединений.
+
+Если я правильно понял задание то надо прикрепить шаблон Template App HTTP Service,
+На всякий случай я еще шаблон с апачем вставил и настроил apache-monitoring.png и added_nginx_http_templates.png
+
+3. Настроить мониторинг созданных в рамках курса виртуальных машин.
+
+Необходимо в файле zabbix_agentd.conf настроить три параметра
+
+Для сервера 192.168.111.4 (на нем установлен Zabbix)
+
+Server=127.0.0.1
+ServerActive=127.0.0.1
+Hostname=gb_hl_1
+
+Для сервера 192.168.111.3
+
+Server=192.168.111.4
+ServerActive=192.168.111.4
+Hostname=gb_hl_2
+
+Пруф мониторинга gb_hl_1-monitoring.png
+
+4.* Добавить шаблон мониторинга NGINX.
+
+Шаблон входит в стандартную поставку.
+Пруф мониторинга nginx-monitoring.png
