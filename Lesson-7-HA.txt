@@ -1,0 +1,73 @@
+1. Установить RabbitMQ.
+
+yum search rabbit
+yum install rabbitmq-server
+rabbitmq-plugins enable rabbitmq_management
+systemctl restart rabbitmq-server.service 
+yum install php73-php-pecl-amqp
+ifconfig
+yum search mbstring
+yum install php73-php-mbstring php73-php-bcmath
+systemctl restart php73-php-fpm.service 
+yum install php73-php-pecl-amqp
+pwd
+cd ..
+cd /var/www/highload.gb/
+su vagrant
+exit
+
+
+2. Создать несколько очередей.
+
+http://192.168.111.4:15672/#/queues
+
+Файл chrome_1nN7xl2xay.png
+
+3. Реализовать цепочку «Заказ еды — оплата — доставка — отзыв клиента». Сколько понадобится очередей?
+
+Думаю что понадобится 4 очереди. Реализовать не удалось.
+
+<?php
+require_once('vendor/autoload.php');
+
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Exception\AMQPProtocolChannelException;
+use PhpAmqpLib\Message\AMQPMessage;
+
+try {
+    // соединяемся с RabbitMQ
+    $connection = new AMQPStreamConnection('localhost', 5672, 'guest', 'guest'); 
+
+    // Создаем канал общения с очередью
+    $channel = $connection->channel();
+    $channel->queue_declare('Order', false, true, false, false);
+	$channel->queue_declare('Payment', false, true, false, false);
+	$channel->queue_declare('Delivery', false, true, false, false);
+	$channel->queue_declare('Feedback', false, true, false, false);
+    
+    // создаем сообщение
+    $msg = new AMQPMessage(json_encode([
+	"order" => 1,
+	"payment" => 200,
+	"delivery" => "room №2"
+	"feedback" => 1
+	]));
+    // размещаем сообщение в очереди
+    $channel->basic_publish($msg, '', 'Order');
+    
+	while(count($channel->callbacks)) {	    
+		$channel->wait();
+	}
+			
+    // закрываем соединения
+    $channel->close();
+    $connection->close();
+}
+catch (AMQPProtocolChannelException $e){
+    echo $e->getMessage();
+}
+catch (AMQPException $e){
+    echo $e->getMessage();
+}
+
+
